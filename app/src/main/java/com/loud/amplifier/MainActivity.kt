@@ -15,18 +15,17 @@ class MainActivity : AppCompatActivity() {
     private var isRunning = false
     private lateinit var btnToggle: Button
     private lateinit var seekAmplification: SeekBar
-    private lateinit var seekNoiseReduction: SeekBar
+    private lateinit var seekBass: SeekBar
     private lateinit var txtAmplification: TextView
-    private lateinit var txtNoiseReduction: TextView
+    private lateinit var txtBass: TextView
+    private lateinit var btnCompressor: Button
+    private lateinit var btnLimiter: Button
 
     private val requestPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) {
-            toggleAudio()
-        } else {
-            Toast.makeText(this, "❌ Autorisation micro requise", Toast.LENGTH_LONG).show()
-        }
+        if (granted) toggleAudio()
+        else Toast.makeText(this, "❌ Autorisation micro requise", Toast.LENGTH_LONG).show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,36 +36,58 @@ class MainActivity : AppCompatActivity() {
 
         btnToggle = findViewById(R.id.btnToggle)
         seekAmplification = findViewById(R.id.seekAmplification)
-        seekNoiseReduction = findViewById(R.id.seekNoiseReduction)
+        seekBass = findViewById(R.id.seekBass)
         txtAmplification = findViewById(R.id.txtAmplification)
-        txtNoiseReduction = findViewById(R.id.txtNoiseReduction)
+        txtBass = findViewById(R.id.txtBass)
+        btnCompressor = findViewById(R.id.btnCompressor)
+        btnLimiter = findViewById(R.id.btnLimiter)
 
         btnToggle.setOnClickListener { toggleAudio() }
 
         seekAmplification.apply {
-            max = 290
-            progress = 70
+            max = 490
+            progress = 240
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
                     audioProcessor.amplification = 1f + p / 10f
-                    txtAmplification.text = "Amplification: ×${String.format("%.1f", audioProcessor.amplification)}"
+                    txtAmplification.text = "🔊 Amplification: ×${String.format("%.1f", audioProcessor.amplification)}"
                 }
                 override fun onStartTrackingTouch(sb: SeekBar?) = Unit
                 override fun onStopTrackingTouch(sb: SeekBar?) = Unit
             })
         }
 
-        seekNoiseReduction.apply {
-            max = 100
-            progress = 70
+        seekBass.apply {
+            max = 30
+            progress = 20
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
-                    audioProcessor.noiseReduction = p / 100f
-                    txtNoiseReduction.text = "Réduction bruit: ${(p / 100f * 100).toInt()}%"
+                    audioProcessor.bassBoost = p / 10f
+                    txtBass.text = "🎵 Boost graves: ${String.format("%.1f", audioProcessor.bassBoost)}x"
                 }
                 override fun onStartTrackingTouch(sb: SeekBar?) = Unit
                 override fun onStopTrackingTouch(sb: SeekBar?) = Unit
             })
+        }
+
+        btnCompressor.apply {
+            isSelected = true
+            setText("✅ Compresseur ON")
+            setOnClickListener {
+                isSelected = !isSelected
+                audioProcessor.compressorEnabled = isSelected
+                text = if (isSelected) "✅ Compresseur ON" else "❌ Compresseur OFF"
+            }
+        }
+
+        btnLimiter.apply {
+            isSelected = true
+            setText("✅ Limiteur ON")
+            setOnClickListener {
+                isSelected = !isSelected
+                audioProcessor.limiterEnabled = isSelected
+                text = if (isSelected) "✅ Limiteur ON" else "❌ Limiteur OFF"
+            }
         }
     }
 
@@ -78,7 +99,7 @@ class MainActivity : AppCompatActivity() {
             if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                 audioProcessor.start()
                 isRunning = true
-                Toast.makeText(this, "🔊 Amplificateur démarré ! Casque OBLIGATOIRE", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "🔊 LOUDEST MODE ACTIF ! CASQUE OBLIGATOIRE ⚠️", Toast.LENGTH_LONG).show()
             } else {
                 requestPermission.launch(Manifest.permission.RECORD_AUDIO)
                 return
@@ -88,7 +109,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateUI() {
-        btnToggle.text = if (isRunning) "⏹ ARRÊTER" else "▶ DÉMARRER"
+        btnToggle.text = if (isRunning) "⏹ COUPER" else "▶ MAXIMUM"
         btnToggle.setBackgroundColor(if (isRunning) 0xFFFF5252.toInt() else 0xFF4CAF50.toInt())
     }
 
