@@ -31,17 +31,19 @@
         android:progressTint="#00E5FF" android:thumbTint="#00E5FF"/>
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="horizontal" android:gap="12dp" android:layout_marginBottom="25dp">
+        android:orientation="horizontal" android:layout_marginBottom="25dp">
 
         <Button android:id="@+id/btnCompressor" android:layout_width="0dp"
             android:layout_height="55dp" android:layout_weight="1"
             android:text="✅ Compresseur ON" android:textSize="13sp"
-            android:backgroundTint="#2E7D32" android:textColor="#FFFFFF"/>
+            android:backgroundTint="#2E7D32" android:textColor="#FFFFFF"
+            android:layout_marginEnd="6dp"/>
 
         <Button android:id="@+id/btnLimiter" android:layout_width="0dp"
             android:layout_height="55dp" android:layout_weight="1"
             android:text="✅ Limiteur ON" android:textSize="13sp"
-            android:backgroundTint="#2E7D32" android:textColor="#FFFFFF"/>
+            android:backgroundTint="#2E7D32" android:textColor="#FFFFFF"
+            android:layout_marginStart="6dp"/>
     </LinearLayout>
 
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
