@@ -1,0 +1,10 @@
+*.iml
+.gradle
+/build/
+/captures/
+.externalNativeBuild
+.cxx
+local.properties
+.DS_Store
+*.apk
+gradle-wrapper.jar
