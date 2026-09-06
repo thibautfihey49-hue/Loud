@@ -1,54 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical" android:padding="20dp"
-    android:gravity="center_horizontal" android:background="#0A0A0A">
+    android:orientation="vertical" android:padding="24dp"
+    android:gravity="center_horizontal" android:background="#121212">
 
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="🔊 L O U D — ULTIMATE" android:textSize="26sp"
-        android:textStyle="bold" android:textColor="#FFD700" android:layout_marginBottom="5dp"/>
+        android:text="🔊 Loud — Son Propre" android:textSize="24sp"
+        android:textStyle="bold" android:textColor="#4CAF50" android:layout_marginBottom="5dp"/>
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Amplification Vocale Maximale" android:textSize="14sp"
-        android:textColor="#888888" android:layout_marginBottom="30dp"/>
+        android:text="Sans saturation, sans grésillement" android:textSize="14sp"
+        android:textColor="#888888" android:layout_marginBottom="35dp"/>
 
     <Button android:id="@+id/btnToggle" android:layout_width="match_parent"
-        android:layout_height="90dp" android:text="▶ MAXIMUM" android:textSize="22sp"
-        android:textStyle="bold" android:backgroundTint="#FF6D00" android:textColor="#FFFFFF"
-        android:layout_marginBottom="35dp"/>
+        android:layout_height="85dp" android:text="▶ DÉMARRER" android:textSize="20sp"
+        android:textStyle="bold" android:backgroundTint="#4CAF50" android:textColor="#FFFFFF"
+        android:layout_marginBottom="40dp"/>
 
     <TextView android:id="@+id/txtAmplification" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:text="🔊 Amplification: ×25.0"
-        android:textSize="17sp" android:textColor="#FFD700" android:layout_marginBottom="8dp"/>
+        android:layout_height="wrap_content" android:text="🔊 Amplification: ×12"
+        android:textSize="16sp" android:textColor="#A5D6A7" android:layout_marginBottom="8dp"/>
     <SeekBar android:id="@+id/seekAmplification" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:layout_marginBottom="25dp"
-        android:progressTint="#FF6D00" android:thumbTint="#FFD700"/>
+        android:layout_height="wrap_content" android:layout_marginBottom="30dp"
+        android:progressTint="#4CAF50" android:thumbTint="#81C784"/>
 
-    <TextView android:id="@+id/txtBass" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:text="🎵 Boost graves: 2.0x"
-        android:textSize="17sp" android:textColor="#00E5FF" android:layout_marginBottom="8dp"/>
-    <SeekBar android:id="@+id/seekBass" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:layout_marginBottom="25dp"
-        android:progressTint="#00E5FF" android:thumbTint="#00E5FF"/>
-
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="horizontal" android:layout_marginBottom="25dp">
-
-        <Button android:id="@+id/btnCompressor" android:layout_width="0dp"
-            android:layout_height="55dp" android:layout_weight="1"
-            android:text="✅ Compresseur ON" android:textSize="13sp"
-            android:backgroundTint="#2E7D32" android:textColor="#FFFFFF"
-            android:layout_marginEnd="6dp"/>
-
-        <Button android:id="@+id/btnLimiter" android:layout_width="0dp"
-            android:layout_height="55dp" android:layout_weight="1"
-            android:text="✅ Limiteur ON" android:textSize="13sp"
-            android:backgroundTint="#2E7D32" android:textColor="#FFFFFF"
-            android:layout_marginStart="6dp"/>
-    </LinearLayout>
+    <TextView android:id="@+id/txtNoiseGate" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="🎚️ Réduction bruit: 50%"
+        android:textSize="16sp" android:textColor="#81D4FA" android:layout_marginBottom="8dp"/>
+    <SeekBar android:id="@+id/seekNoiseGate" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginBottom="35dp"
+        android:progressTint="#0288D1" android:thumbTint="#4FC3F7"/>
 
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="⚠️ CASQUE OBLIGATOIRE — Risque de larsen et de dommage auditif à volume maximum.\n\n✅ Stéréo · 48kHz · Compresseur · Limiteur · Anti-distorsion"
-        android:textSize="12sp" android:textColor="#666666" android:gravity="center"
+        android:text="✅ CASQUE OBLIGATOIRE\n✅ Filtre anti-bruit · Soft-clipping sans distortion\n✅ Mono 44.1kHz · Faible latence"
+        android:textSize="13sp" android:textColor="#757575" android:gravity="center"
         android:lineSpacingExtra="4dp"/>
 
 </LinearLayout>

@@ -2,7 +2,6 @@ package com.loud.amplifier
 
 import android.media.AudioAttributes
 import android.media.AudioFormat
-import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
 import android.media.MediaRecorder
@@ -11,38 +10,38 @@ import kotlin.math.*
 
 class AudioProcessor {
     companion object {
-        const val SAMPLE_RATE = 48000
-        const val CHANNEL_CONFIG_IN = AudioFormat.CHANNEL_IN_MONO
-        const val CHANNEL_CONFIG_OUT = AudioFormat.CHANNEL_OUT_STEREO
+        const val SAMPLE_RATE = 44100
+        const val CHANNEL_IN = AudioFormat.CHANNEL_IN_MONO
+        const val CHANNEL_OUT = AudioFormat.CHANNEL_OUT_MONO
         const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     }
 
     @Volatile private var isRunning = false
     private var recordingThread: Thread? = null
-    var amplification: Float = 25f
-    var bassBoost: Float = 2.0f
-    var compressorEnabled = true
-    var limiterEnabled = true
 
-    private val minBufIn = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_IN, AUDIO_FORMAT)
-    private val minBufOut = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG_OUT, AUDIO_FORMAT)
-    private val bufferSize = maxOf(minBufIn, minBufOut) * 8
+    // Réglages équilibrés — PUISSANT mais PROPRE
+    var amplification: Float = 12f       // ×12 maxi propre
+    var noiseGate: Float = 0.015f        // Supprime silence/gros bruit
+    var softKnee: Float = 0.85f          // Anti-écrêtage DOUX
+
+    private val minBufIn = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_IN, AUDIO_FORMAT)
+    private val minBufOut = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_OUT, AUDIO_FORMAT)
+    private val bufferSize = maxOf(minBufIn, minBufOut) * 2  // Réduit latence
 
     private var audioRecord: AudioRecord? = null
     private var audioTrack: AudioTrack? = null
 
-    private var prevSampleL = 0f
-    private var prevSampleR = 0f
-    private var envelope = 0f
+    private var prevHP = 0f
+    private var prevOutHP = 0f
 
     fun start() {
         if (isRunning) return
         isRunning = true
 
         audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
             SAMPLE_RATE,
-            CHANNEL_CONFIG_IN,
+            CHANNEL_IN,
             AUDIO_FORMAT,
             bufferSize
         )
@@ -54,14 +53,14 @@ class AudioProcessor {
 
         val fmt = AudioFormat.Builder()
             .setSampleRate(SAMPLE_RATE)
-            .setChannelMask(CHANNEL_CONFIG_OUT)
+            .setChannelMask(CHANNEL_OUT)
             .setEncoding(AUDIO_FORMAT)
             .build()
 
         audioTrack = AudioTrack.Builder()
             .setAudioAttributes(attrs)
             .setAudioFormat(fmt)
-            .setBufferSizeInBytes(bufferSize * 2)
+            .setBufferSizeInBytes(bufferSize)
             .setTransferMode(AudioTrack.MODE_STREAM)
             .setPerformanceMode(AudioTrack.PERFORMANCE_MODE_LOW_LATENCY)
             .build()
@@ -86,57 +85,48 @@ class AudioProcessor {
 
     private fun loop() {
         Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
-        val shortBufIn = ShortArray(bufferSize / 2)
-        val shortBufOut = ShortArray(bufferSize)
+        val shortBuf = ShortArray(bufferSize / 2)
 
         while (isRunning) {
-            val read = audioRecord?.read(shortBufIn, 0, shortBufIn.size) ?: -1
+            val read = audioRecord?.read(shortBuf, 0, shortBuf.size) ?: -1
             if (read <= 0) {
-                Thread.sleep(2)
+                Thread.sleep(5)
                 continue
             }
 
             for (i in 0 until read) {
-                var sample = shortBufIn[i] / 32768.0f
+                var sample = shortBuf[i] / 32768.0f
 
-                // === Filtre passe-haut (supprime bruit grave) ===
-                val hpOut = sample - prevSampleL * 0.95f
-                prevSampleL = sample
-                sample = hpOut
+                // === Filtre passe-haut : supprime bruit grave (vent, fond) ===
+                val hp = sample - prevHP
+                prevHP = sample
+                sample = hp * 0.9f + prevOutHP * 0.95f
+                prevOutHP = sample
 
-                // === Boost des basses ===
-                sample = sample * (1f + bassBoost * 0.3f)
+                // === Noise Gate : coupe le silence ===
+                if (abs(sample) < noiseGate) {
+                    sample = 0f
+                }
 
-                // === Amplification MAX ===
+                // === Amplification ===
                 sample *= amplification
 
-                // === Compresseur (niveau constant) ===
-                if (compressorEnabled) {
-                    val absSample = abs(sample)
-                    envelope = 0.98f * envelope + 0.02f * absSample
-                    val target = 0.7f
-                    if (envelope > 0.01f) {
-                        val compGain = target / envelope
-                        sample *= compGain.coerceAtMost(3f)
-                    }
+                // === SOFT CLIPPING ULTRA DOUX — ZÉRO GRÉSILLEMENT ===
+                if (sample > softKnee) {
+                    val excess = sample - softKnee
+                    sample = softKnee + excess / (1f + excess * 2f)
+                } else if (sample < -softKnee) {
+                    val excess = sample + softKnee
+                    sample = -softKnee + excess / (1f - excess * 2f)
                 }
 
-                // === Limiteur anti-écrêtage ===
-                if (limiterEnabled) {
-                    if (sample > 0.95f) sample = 0.95f + (sample - 0.95f) * 0.3f
-                    if (sample < -0.95f) sample = -0.95f + (sample + 0.95f) * 0.3f
-                }
+                // === Limiteur final ===
+                sample = sample.coerceIn(-0.95f, 0.95f)
 
-                // === Soft clipping (doux, pas de distortion dure) ===
-                sample = tanh(sample * 1.2f)
-
-                // === Sortie STÉRÉO ===
-                val outputSample = (sample * 32767f).toInt().toShort()
-                shortBufOut[i*2] = outputSample
-                shortBufOut[i*2 + 1] = outputSample
+                shortBuf[i] = (sample * 32767f).toInt().toShort()
             }
 
-            audioTrack?.write(shortBufOut, 0, read * 2)
+            audioTrack?.write(shortBuf, 0, read)
         }
     }
 }
