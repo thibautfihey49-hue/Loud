@@ -1,4 +1,6 @@
 package com.loud.amplifier
+
+import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
@@ -28,14 +30,21 @@ class AudioProcessor {
     fun start() {
         if (isRunning) return
         audioRecord = AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT, minBufferSizeIn * 4)
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .build()
+        val audioFormat = AudioFormat.Builder()
+            .setSampleRate(SAMPLE_RATE)
+            .setChannelMask(OUTPUT_CHANNEL_CONFIG)
+            .setEncoding(AUDIO_FORMAT)
+            .build()
         audioTrack = AudioTrack.Builder()
-            .setAudioAttributes(AudioManager.AudioAttributes.Builder()
-                .setUsage(AudioManager.USAGE_MEDIA)
-                .setContentType(AudioManager.CONTENT_TYPE_SPEECH).build())
-            .setAudioFormat(AudioFormat.Builder().setSampleRate(SAMPLE_RATE)
-                .setChannelMask(OUTPUT_CHANNEL_CONFIG).setEncoding(AUDIO_FORMAT).build())
+            .setAudioAttributes(audioAttributes)
+            .setAudioFormat(audioFormat)
             .setBufferSizeInBytes(minBufferSizeOut * 4)
-            .setTransferMode(AudioTrack.MODE_STREAM).build()
+            .setTransferMode(AudioTrack.MODE_STREAM)
+            .build()
         isRunning = true
         audioRecord?.startRecording()
         audioTrack?.play()
@@ -80,7 +89,7 @@ class AudioProcessor {
     }
 
     private class HighPassFilter(cutoff: Float, sampleRate: Int) {
-        private val alpha = 1.0f / (1.0f + 2.0f * PI * cutoff / sampleRate)
+        private val alpha = 1.0f / (1.0f + 2.0f * PI.toFloat() * cutoff / sampleRate)
         private var prevInput = 0f; private var prevOutput = 0f
         fun process(buffer: FloatArray) {
             for (i in buffer.indices) {
@@ -91,7 +100,7 @@ class AudioProcessor {
     }
 
     private class LowPassFilter(cutoff: Float, sampleRate: Int) {
-        private val alpha = (2.0f * PI * cutoff / sampleRate) / (1.0f + 2.0f * PI * cutoff / sampleRate)
+        private val alpha = (2.0f * PI.toFloat() * cutoff / sampleRate) / (1.0f + 2.0f * PI.toFloat() * cutoff / sampleRate)
         private var prevOutput = 0f
         fun process(buffer: FloatArray) {
             for (i in buffer.indices) {
@@ -102,8 +111,8 @@ class AudioProcessor {
     }
 
     private class NotchFilter(private val centerFreq: Float, bandwidth: Float, sampleRate: Int) {
-        private val w0 = 2.0f * PI * centerFreq / sampleRate
-        private val bw = 2.0f * PI * bandwidth / sampleRate
+        private val w0 = 2.0f * PI.toFloat() * centerFreq / sampleRate
+        private val bw = 2.0f * PI.toFloat() * bandwidth / sampleRate
         private val a1 = -2.0f * cos(w0); private val a2 = 1.0f - bw
         private val b1 = -2.0f * cos(w0); private val b2 = 1.0f - bw
         private var x1 = 0f; private var x2 = 0f; private var y1 = 0f; private var y2 = 0f
